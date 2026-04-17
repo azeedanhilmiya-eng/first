@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { anthropic, cachedSystem, MODEL } from "@/lib/claude";
+import { llm, MODEL } from "@/lib/llm";
 import { loadRubric, rubricAsSystemText } from "@/lib/rubric";
 import { IDEATION_SYSTEM } from "@/prompts/ideation";
 
@@ -33,7 +33,7 @@ export type IdeationOutput = z.infer<typeof IdeationOutput>;
 
 export async function runIdeation(input: IdeationInput): Promise<IdeationOutput> {
   const rubric = loadRubric(input.rubric);
-  const system = cachedSystem([IDEATION_SYSTEM, rubricAsSystemText(rubric)]);
+  const system = [IDEATION_SYSTEM, rubricAsSystemText(rubric)].join("\n\n");
 
   const userPayload = {
     track: input.track,
@@ -44,14 +44,15 @@ export async function runIdeation(input: IdeationInput): Promise<IdeationOutput>
     extra: input.extra ?? "",
   };
 
-  const res = await anthropic.messages.create({
+  const res = await llm.chat.completions.create({
     model: MODEL,
-    max_tokens: 2048,
-    system,
+    temperature: 0.7,
+    response_format: { type: "json_object" },
     messages: [
+      { role: "system", content: system },
       {
         role: "user",
-        content: `以下是团队信息（JSON），请产出 3 个候选选题：\n${JSON.stringify(
+        content: `以下是团队信息（JSON），请严格按规定 JSON schema 产出 3 个候选选题：\n${JSON.stringify(
           userPayload,
           null,
           2,
@@ -60,10 +61,8 @@ export async function runIdeation(input: IdeationInput): Promise<IdeationOutput>
     ],
   });
 
-  const text = res.content
-    .map((b) => (b.type === "text" ? b.text : ""))
-    .join("")
-    .trim();
+  const text = res.choices[0]?.message?.content?.trim() ?? "";
+  if (!text) throw new Error("LLM returned empty content");
 
   const jsonStart = text.indexOf("{");
   const jsonEnd = text.lastIndexOf("}");

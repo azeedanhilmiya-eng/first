@@ -21,10 +21,20 @@
 ## 技术栈
 
 - **前端/后端**：Next.js 15（App Router） + Route Handlers
-- **Agent**：Claude Agent SDK + Claude Sonnet 4.6（启用 prompt caching）
+- **LLM**：OpenAI 兼容 SDK，默认经 codeflow.asia 代理（可切官方 OpenAI / Claude 兼容端点）
 - **RAG**：Supabase pgvector（数据源 = 公开获奖项目 + 路演/新闻提取）
-- **UI**：shadcn/ui + Vercel AI SDK 流式
+- **UI**：最小自绘（后期换 shadcn/ui）
 - **部署**：Vercel + Supabase 免费额度
+
+## 环境变量（Vercel 配置）
+
+| 变量 | 说明 |
+|-----|------|
+| `LLM_API_KEY` | API key（codeflow.asia 后台生成） |
+| `LLM_BASE_URL` | 代理 base URL，如 `https://codeflow.asia/v1` |
+| `LLM_MODEL` | 模型名，如 `gpt-5.4-mini` |
+
+未配置 key 时自动进入演示模式（返回样例输出）。
 
 ## 本地开发
 
