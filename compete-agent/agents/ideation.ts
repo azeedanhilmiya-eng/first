@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { llm, MODEL } from "@/lib/llm";
+import { getLLM, MODEL } from "@/lib/llm";
 import { loadRubric, rubricAsSystemText } from "@/lib/rubric";
 import { IDEATION_SYSTEM } from "@/prompts/ideation";
 
@@ -44,7 +44,7 @@ export async function runIdeation(input: IdeationInput): Promise<IdeationOutput>
     extra: input.extra ?? "",
   };
 
-  const res = await llm.chat.completions.create({
+  const res = await getLLM().chat.completions.create({
     model: MODEL,
     temperature: 0.7,
     response_format: { type: "json_object" },
