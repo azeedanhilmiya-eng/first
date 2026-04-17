@@ -12,7 +12,7 @@ export default function Home() {
     time_budget_weeks: 12,
   });
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<IdeationOutput | null>(null);
+  const [result, setResult] = useState<(IdeationOutput & { _demo?: boolean }) | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent) {
@@ -112,6 +112,20 @@ export default function Home() {
 
       {result && (
         <section style={{ marginTop: 40 }}>
+          {result._demo && (
+            <div
+              style={{
+                padding: "10px 14px",
+                background: "#3b2a12",
+                color: "#fbbf24",
+                borderRadius: 8,
+                marginBottom: 16,
+                fontSize: 14,
+              }}
+            >
+              🧪 演示模式：当前未配置 ANTHROPIC_API_KEY，展示的是样例输出。配置后即为真实 Claude 生成。
+            </div>
+          )}
           <h2>3 个候选</h2>
           {result.candidates.map((c, i) => (
             <article
