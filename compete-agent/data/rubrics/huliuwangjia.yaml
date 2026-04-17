@@ -1,0 +1,61 @@
+competition: 中国国际"互联网+"大学生创新创业大赛
+tracks:
+  - 高教主赛道
+  - 青年红色筑梦之旅
+  - 职教赛道
+  - 萌芽赛道
+  - 产业赛道
+groups:
+  - 本科生创意组
+  - 初创组
+  - 成长组
+  - 师生共创组
+# 近届评审权重（公开办法整理，仅供 MVP RAG 起步；正式发布前需用当年最新办法覆盖）
+dimensions:
+  - key: innovation
+    name: 创新性
+    weight: 25
+    focus:
+      - 技术或商业模式的原创性与先进性
+      - 相对于已有方案的差异化与不可替代性
+  - key: teamwork
+    name: 团队
+    weight: 20
+    focus:
+      - 团队构成、专业互补、核心成员执行力
+      - 导师/专家支持资源
+  - key: business
+    name: 商业性
+    weight: 25
+    focus:
+      - 目标客户与市场规模
+      - 商业模式与盈利路径
+      - 竞争壁垒与扩张策略
+  - key: feasibility
+    name: 可行性
+    weight: 15
+    focus:
+      - 技术路线的成熟度与工期
+      - 资金/资源需求与风险应对
+  - key: impact
+    name: 引领性/带动性
+    weight: 15
+    focus:
+      - 解决真实社会问题或产业升级价值
+      - 可复制推广、带动就业/育人价值
+judge_personas:
+  - name: 产业评委
+    tone: 犀利、追问盈利模式与客户验证
+    typical_questions:
+      - "客户为什么愿意付费？客单价多少？"
+      - "竞品 3 家，你的护城河是什么？"
+  - name: 学术评委
+    tone: 严谨、追问技术路线
+    typical_questions:
+      - "核心算法与现有方案的定量对比？"
+      - "技术方案的可复现性如何保障？"
+  - name: 投资人评委
+    tone: 关注规模与团队
+    typical_questions:
+      - "两年内预计营收与用户规模？"
+      - "团队核心成员全职投入程度？"
