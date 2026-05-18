@@ -11,3 +11,4 @@ dist
 coverage
 data/awards/*.jsonl
 !data/awards/.gitkeep
+tsconfig.tsbuildinfo
