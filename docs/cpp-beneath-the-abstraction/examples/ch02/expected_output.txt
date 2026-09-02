@@ -1,0 +1,78 @@
+Chapter 2 probe: g++ 13, x86-64 Linux, LP64
+== 1. sizeof: bytes per object ==
+  bool         1
+  char         1
+  short        2
+  int          4
+  long         8
+  long long    8
+  float        4
+  double       8
+  long double  16
+  void*        8
+  std::size_t  8
+  std::int8_t  1
+  std::int64_t 8
+  int holds -2147483648 .. 2147483647 (31 value bits + 1 sign bit)
+
+== 2. Two's complement: the sign is just the top bit's weight ==
+  int8_t    5 = 0000 0101
+  int8_t   -5 = 1111 1011  (~5 + 1)
+  int8_t   -1 = 1111 1111
+  int8_t -128 = 1000 0000
+  uint8_t 251 = 1111 1011  <- identical bits, different weight for bit 7
+  int32_t  -1 = 1111 1111 1111 1111 1111 1111 1111 1111 = 0xffffffff
+
+== 3. Unsigned arithmetic is modular (defined behavior) ==
+  uint8_t 255 + 1 = 0
+  uint8_t   0 - 1 = 255
+  unsigned max + 1 = 0
+  0u - 1 = 4294967295 = 0xffffffff
+  fnv1a("hello") = 0x4f9f2cab
+
+== 4. Signed overflow is undefined: check before, not after ==
+  checked_add(2147483640, 7) -> 2147483647
+  checked_add(2147483647, 1) -> overflow, no result
+  checked_add(-2147483648, -1) -> overflow, no result
+  -(INT_MIN) computed in long long = 2147483648
+
+== 5. Integer promotion: nothing is computed narrower than int ==
+  uint8_t a = 200, b = 100; a + b = 300 (sizeof 4)
+  uint8_t stored = a + b   -> 44
+  std::cout << stored prints ',' (uint8_t is unsigned char)
+  ~a = -201 as int; as uint8_t = 55
+  -1 < 1u  (usual arithmetic conversions) = false  because -1 becomes 4294967295
+  std::cmp_less(-1, 1u)                   = true
+  empty.size() - 1 = 18446744073709551615
+
+== 6. Value categories: what an expression IS, not what it names ==
+  n            : lvalue
+  n + 1        : prvalue
+  42           : prvalue
+  "literal"    : lvalue  (string literals live in .rodata)
+  std::move(n) : xvalue
+  make_name()  : prvalue  (returns std::string by value: "temp")
+  front(v)     : lvalue  (returns int&, aliases v[0] = 1)
+  bind(n)            -> int&
+  bind(cn)           -> const int&
+  bind(42)           -> int&&
+  bind(std::move(n)) -> int&&
+
+== 7. Casts: static_cast converts, reinterpret_cast relabels, const_cast unlocks ==
+  static_cast<int>(-3.7)       = -3  (cvttsd2si truncates toward zero)
+  static_cast<int>(1.15 * 100) = 114  (1.15 is really 1.149999...)
+  static_cast<uint8_t>(300)    = 44  (300 mod 256)
+  static_cast<int8_t>(200)     = -56  (bits 1100 1000 reread as signed)
+  float 1.0f in memory (x86-64 little-endian): 0x00 0x00 0x80 0x3f
+  std::bit_cast<uint32_t>(1.0f) = 0x3f800000 = 0011 1111 1000 0000 0000 0000 0000 0000
+  legacy_length(const_cast<char*>(text.c_str())) = 5, text still "hello"
+
+== 8. Overload resolution: picked at compile time from static types ==
+  type_name('a')       -> char  (exact match)
+  type_name(short{1})  -> int  (integral promotion)
+  type_name(uint8_t{7})-> int  (integral promotion)
+  type_name(true)      -> int  (bool promotes to int)
+  type_name(1u)        -> unsigned  (exact match)
+  type_name(1L)        -> long  (exact match)
+  type_name(1.5f)      -> double  (floating-point promotion)
+  type_name("text")    -> const char*  (array-to-pointer)
