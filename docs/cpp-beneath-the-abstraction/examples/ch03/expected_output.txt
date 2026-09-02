@@ -1,0 +1,43 @@
+Chapter 3 probe: g++ 13, x86-64 Linux
+== 1. Address space: which mapping holds each object ==
+  some_function (code)        the executable (r-x)
+  kConfigVersion (const int)  the executable (r--)
+  g_initialized (int = 7)     the executable (rw-)
+  g_zeroed (int, no init)     the executable (rw-)
+  *small (new int)            [heap] (rw-)
+  *large (new char[1 MiB])    an anonymous mmap (rw-)
+  local (stack variable)      [stack] (rw-)
+  getpid (libc function)      a shared library (r-x)
+  code < rodata < data/bss < heap < stack: true
+  every user-space address is below 2^47:  true
+
+== 2. Stack frames: one per call, carved by moving the stack pointer ==
+  frame 0 -> frame 1: the callee's local sits 64 bytes LOWER (g++ -O0 frame size)
+  frame 1 -> frame 2: the callee's local sits 64 bytes LOWER (g++ -O0 frame size)
+  frame 2 -> frame 3: the callee's local sits 64 bytes LOWER (g++ -O0 frame size)
+  the stack grows downward:                  true
+  a second identical call chain reuses the same slots: true
+
+== 3. Pointer arithmetic is scaled by sizeof(*p) ==
+  int*:    p + 1 is 4 bytes further
+  double*: p + 1 is 8 bytes further
+  Record*: p + 1 is 16 bytes further (sizeof(Record) = 16)
+  ints[3] = 40, *(ints + 3) = 40, 3[ints] = 40  (a[i] is defined as *(a + i))
+  &ints[4] - &ints[0] = 4 elements = 16 bytes
+  sizeof(ints) = 20 bytes, sizeof(p) = 8 bytes: the array decayed to one address
+  first 8 bytes of ints: a0 00 00 00 14 00 00 00  (10 then 20, little-endian)
+
+== 4. References: a pointer the compiler dereferences for you ==
+  x after r = 20, ++*p, ++r: 22
+  &r == &x: true  (a reference has no address of its own)
+  sizeof(Holder) = 8  (a stored reference is an 8-byte address)
+  after r = y: x = 1, &r == &x still true
+  nullptr: sizeof(std::nullptr_t) = 8, bool(p) = false, p == nullptr: true
+
+== 5. Alignment and padding: the compiler inserts invisible bytes ==
+  Padded    {char, int, char}: sizeof 12, alignof 4, offsets tag=0 value=4 flag=8
+  Reordered {int, char, char}: sizeof 8, alignof 4, offsets value=0 tag=4 flag=5
+  alignas(64) CacheLineCounter: sizeof 64, alignof 64
+  alignof: char 1, short 2, int 4, double 8, void* 8, max_align_t 16
+  addresses are multiples of alignof: stack Padded true, stack double true, heap Padded true (new aligns to 16)
+  1000 Padded occupy 12000 bytes; 1000 Reordered occupy 8000 bytes: same data, one third less memory
