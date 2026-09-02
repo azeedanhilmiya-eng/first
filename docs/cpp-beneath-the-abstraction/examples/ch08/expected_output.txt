@@ -1,0 +1,40 @@
+Chapter 8 probe: g++ 13, libstdc++ 13, x86-64 Linux
+== 1. std::vector growth: capacity doubles, elements move ==
+  sizeof(std::vector<int>) = 24 (begin, end, end-of-storage)
+  size  1 -> capacity 1
+  size  2 -> capacity 2
+  size  3 -> capacity 4
+  size  5 -> capacity 8
+  size  9 -> capacity 16
+  size 17 -> capacity 32
+  17 push_backs: 6 reallocations, 6 heap blocks allocated, elements contiguous: true
+  with reserve(17) first: 1 heap block, capacity 17
+
+== 2. Invalidation: a reallocation moves every element to a new block ==
+  vector: push_back past capacity moved the buffer: true
+  deque:  1000 push_backs, front() still at the same address: true
+  list:   1000 push_backs and an erase, front() still at the same address: true
+
+== 3. std::map (red-black tree) versus std::unordered_map (hash table) ==
+  sizeof(std::map<int,int>) = 48, sizeof(std::unordered_map<int,int>) = 56
+  map: 8 inserts -> 8 heap blocks (one tree node each), iteration: 3 7 10 19 25 42 61 88  (sorted)
+  unordered_map: 8 inserts -> 9 heap blocks (8 nodes + 1 bucket array), buckets 13, load factor 0.615385, max 1
+  unordered_map iteration is sorted: false  (bucket order, not key order)
+  lookups: map.count(19) = 1 via O(log n) comparisons; unordered_map.count(19) = 1 via hash -> bucket 6
+
+== 4. Layout decides speed: contiguous versus node-based ==
+  vector<int>: 4 bytes per element, 16 per 64-byte cache line
+  list<int>:   node = prev + next + value = 24 bytes, plus allocator overhead, scattered across the heap
+  map<int,int> node: 40 bytes (color, parent, left, right, then the 8-byte pair)
+
+== 5. Algorithms: iterator pairs and ranges instead of hand-written loops ==
+  sorted:            1 2 3 5 7 8 9 
+  first > 6:         7 at index 4
+  sum (accumulate):  35
+  squares:           1 4 9 25 49 64 81 
+  erase_if(even):    removed 2, left 1 3 5 7 9 
+  ranges view:       30 50 70 90 
+
+== 6. emplace_back constructs in place; push_back constructs then moves ==
+  push_back(Tracked("a")): constructed 1, moved 1, copied 0
+  emplace_back("b"):       constructed 1, moved 0, copied 0
