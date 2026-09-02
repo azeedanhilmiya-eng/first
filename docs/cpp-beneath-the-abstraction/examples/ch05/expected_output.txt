@@ -1,0 +1,35 @@
+Chapter 5 probe: g++ 13, x86-64 Linux, Itanium C++ ABI
+== 1. Layout: one hidden pointer per polymorphic object ==
+  sizeof(Plain)  = 32   (just the std::string)
+  sizeof(Shape)  = 40   (vptr 8 + std::string 32)
+  sizeof(Circle) = 48   (Shape 40 + double 8)
+  sizeof(Rect)   = 56   (Shape 40 + two doubles)
+  offset of label_ inside Circle: 8 (the 8 bytes before it are the vptr)
+
+== 2. vptr: set by the constructor, shared by every object of one dynamic type ==
+  vptr(c1) == vptr(c2): true  (one vtable per class)
+  vptr(c1) == vptr(r1): false  (different classes)
+  vptr(c1) != 0:        true  (points into .rodata of the executable)
+
+== 3. Dynamic dispatch: the call site does not know which function it calls ==
+  circle "wheel" area = 0.785
+  rect "door"    area = 1.600
+  rect "tile"    area = 0.090
+
+== 4. dynamic_cast and typeid consult the vtable's type information ==
+  c: typeid name "N3geo6CircleE", dynamic_cast<const Rect*> returned nullptr
+  r: typeid name "N3geo4RectE", is a Rect, square = true
+  typeid(c) == typeid(geo::Circle): true
+  dynamic_cast<const Rect&>(circle) threw: std::bad_cast
+
+== 5. Object slicing: copying into a base object cuts the derived part off ==
+  sizeof(Base) = 16, sizeof(Derived) = 16
+  ref.who()  = Derived   (dynamic type preserved)
+  copy.who() = Base      (sliced: a Base is all that exists)
+  by_value[0].who() = Base
+
+== 6. Multiple inheritance: a Timer* into a Service does not point at its start ==
+  sizeof(Service) = 32 (two vptr+int subobjects of 16)
+  (Logger*)&svc - &svc = 0 bytes
+  (Timer*)&svc  - &svc = 16 bytes
+  dynamic_cast back to Service* restores the address: true
