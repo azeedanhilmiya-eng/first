@@ -1,0 +1,7 @@
+geometry v1.2 (__cplusplus = 202002)
+polygon          n      area   perimeter
+unit-square      4     1.000       4.000
+right-triangle   3     6.000      12.000
+unit-hexagon     6     2.598       6.000
+distance() calls counted inside geometry.cpp: 13
+rows printed, counted inside main.cpp:        3
