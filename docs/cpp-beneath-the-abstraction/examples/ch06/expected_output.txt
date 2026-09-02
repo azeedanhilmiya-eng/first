@@ -1,0 +1,38 @@
+Chapter 6 probe: g++ 13, libstdc++ 13, x86-64 Linux
+== 1. unique_ptr: exactly one owner, zero overhead ==
+  sizeof(Node*) = 8, sizeof(unique_ptr<Node>) = 8  (same bytes, plus a destructor)
+  inspect() sees Node(1)
+  after move: a is null, b owns Node(1)
+  consume() now owns Node(1) and will destroy it
+  ~Node(1)
+  heap blocks: 1 allocated, 1 freed
+
+== 2. Custom deleters: RAII for resources that are not memory ==
+  sizeof(Handle) = 4 (the int only: an empty deleter takes no space)
+  sizeof(unique_ptr<Node, void(*)(Node*)>) = 16 (a function-pointer deleter is stored)
+  open_handle(7)
+  using handle 7
+  close_handle(7)
+
+== 3. shared_ptr: the control block, and make_shared versus new ==
+  sizeof(shared_ptr<Node>) = 16 (object pointer + control-block pointer)
+  shared_ptr<Node>(new Node): 2 heap blocks
+  ~Node(2)
+  make_shared<Node>:          1 heap block
+  after copy: use_count = 2, same object: true
+  after q.reset(): use_count = 1
+  ~Node(3)
+
+== 4. weak_ptr: the object dies at strong == 0; the block waits for weak == 0 ==
+  strong = 1, expired = false
+  lock() succeeded: strong = 2
+  ~Node(4)
+  after the owner died: expired = true, freed blocks so far = 0  (control block still alive)
+  after watcher.reset(): freed blocks = 1
+
+== 5. Parent owns child, child observes parent: no cycle, everything is destroyed ==
+  team strong = 1 (a shared_ptr back-reference would make it 2)
+  alice can reach her team: 1 member
+  ~Team
+  ~Employee
+  blocks: 3 allocated, 3 freed
