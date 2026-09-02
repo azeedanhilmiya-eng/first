@@ -1,0 +1,41 @@
+Chapter 7 probe: g++ 13, x86-64 Linux
+== 1. A function template is instantiated once per distinct T ==
+  maximum(3, 7)         = 7   (T deduced as int)
+  maximum(2.5, 1.5)     = 2.5 (T deduced as double)
+  maximum<std::string>  = pear (T stated)
+  three instantiations => three separate functions in the object file (see nm -C)
+
+== 2. A class template stamps out a distinct type per <T, N> ==
+  FixedStack<int,4>: sizeof = 24 (4 ints + size_t), capacity 4, size 3, pop() = 3
+  FixedStack<double,16>: sizeof = 136 (16 doubles + size_t)
+  FixedStack<int,4> and FixedStack<int,8> are unrelated types
+
+== 3. Concepts: requirements checked at the call, in plain language ==
+  average<int>({3,4,8}) = 5
+  Number<int> true, Number<double> true, Number<std::string> false
+  Printable<int> true, Printable<FixedStack<int,4>> false
+  print_all: mixed 42 2.5 x 
+
+== 4. SFINAE: substitution failure removes a candidate instead of erroring ==
+  has_size<std::vector<int>> true, has_size<int> false
+  describe(7) -> an integer; describe(7.0) -> a floating-point number
+
+== 5. Specialization: pattern-matching on the type argument ==
+  int | double* | const char* | std::vector<int> | std::vector<std::string*> | unknown
+
+== 6. constexpr: the compiler runs the code, the binary holds the answer ==
+  fibonacci(20) = 6765  (a constant in the machine code)
+  compile_time_only(12) = 144
+  table: 0 1 1 2 3 5 8 13 21 34 
+  fibonacci(n) with n read at run time = 55  (same function, run-time call)
+
+== 7. Variadic templates: one recipe, any number of arguments ==
+  sum(1, 2, 3)      = 6   (int)
+  sum(1, 2.5, 3)    = 6.5 (usual arithmetic conversions -> double)
+  sum(std::string)  = abc
+  count_args(1, 'x', 2.0, "s") = 4
+
+== 8. Template argument deduction and CTAD ==
+  std::pair{1, 2.5} is pair<int,double>: true
+  std::vector{1,2,3} is vector<int>:     true
+  maximum(1, 2.5) would NOT compile: T cannot be both int and double (Pitfall 4)
