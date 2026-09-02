@@ -1,0 +1,56 @@
+Chapter 4 probe: g++ 13, x86-64 Linux
+== 1. Automatic objects: constructed at the declaration, destroyed at the closing brace ==
+  + outer constructed
+  + inner-1 constructed
+  + inner-2 constructed
+  (leaving the inner block)
+  - inner-2 destroyed
+  - inner-1 destroyed
+  (leaving show_scope)
+  - outer destroyed
+
+== 2. Members: constructed in declaration order, destroyed in reverse ==
+  + member a constructed
+  + member b constructed
+  (pair is complete)
+  - member b destroyed
+  - member a destroyed
+  Account #1 for ada built via initializer list
+  constructor threw: negative opening balance -> no object exists, no destructor runs
+
+== 3. RAII: the destructor runs on return AND during stack unwinding ==
+  flag raised
+  work finished normally
+  flag lowered (destructor)
+  busy after normal return: false
+  flag raised
+  flag lowered (destructor)
+  caught "disk on fire"; busy after exception: false
+
+== 4. Rule of Five: copy duplicates bytes, move steals a pointer ==
+  sizeof(Buffer) = 48 (string 32 + size_t 8 + int* 8)
+  construct "a": new int[4] = 16 bytes on the heap
+  copy      "a" -> "a-copy": allocated and copied 16 bytes
+  a[0] = 42, b[0] = 7: separate arrays
+  move      -> "a": stole the pointer to 16 bytes; source is now empty
+  after move: c.size() = 4, a.size() = 0, a.name() = (moved-from)
+  copy      "a" -> "a-copy": allocated and copied 16 bytes
+  destroy   "a-copy": delete[] 16 bytes
+  move-assign -> "a": released ours, stole theirs
+  (leaving show_rule_of_five: three destructors, one of them on an empty object)
+  destroy   "(moved-from)": delete[] 0 bytes
+  destroy   "a": delete[] 16 bytes
+  destroy   "(moved-from)": delete[] 0 bytes
+
+== 5. Copy elision: returning by value does not copy ==
+  construct "prvalue": new int[2] = 8 bytes on the heap
+  construct "named": new int[3] = 12 bytes on the heap
+  two objects returned by value: 0 copies, 0 moves
+  destroy   "named": delete[] 12 bytes
+  destroy   "prvalue": delete[] 8 bytes
+
+== 6. Rule of Zero, and struct vs class ==
+  Record copied and moved with no user-written code: r2 has 3 values, r3 has 3, r1 has 0
+  sizeof(Record) = 56 (string 32 + vector 24)
+  sizeof(PointS) = 16, sizeof(PointC) = 16, offsetof(y) = 8 in both: only the default access differs
+  standard layout? PointS true, PointC true, Record true
