@@ -1,0 +1,27 @@
+Chapter 9 probe: g++ 13, x86-64 Linux
+== 1. T&& binds to rvalues; a NAMED T&& is an lvalue ==
+  sink(name)                     -> const& (copied 5 chars)
+  sink(std::string("tmp"))       -> && (would steal 3 chars)
+  sink(std::move(name))          -> && (would steal 5 chars)
+  pass_named_rvalue_ref("bob")   -> const& (copied 3 chars)
+  pass_with_move("bob")          -> && (would steal 3 chars)
+  after std::string moved_to = std::move(name): moved_to = "alice", name.size() = 0 (valid, unspecified: libstdc++ leaves it empty)
+
+== 2. Forwarding references and reference collapsing ==
+  relay(s)                 -> const& (copied 5 chars)   (T = std::string&,  T&& = std::string&)
+  relay(std::string("tmp")) -> && (would steal 3 chars)  (T = std::string,   T&& = std::string&&)
+  collapsing: (int&)&& is int&: true, (int&&)&& is int&&: true
+
+== 3. A lambda is an object of a compiler-written class ==
+  sizeof: [] 1, [n] 4, [&n] 8, [n,&big] 16, hand-written 4
+  is a class: true, operator() present: true
+  after n = 100: by_value(1) = 11, by_ref(1) = 101
+  mutable counter: 1 2 3
+  captureless -> function pointer: fn(21) = 42
+  sizeof(std::function<int(int)>) = 32, erased(1) = 18
+
+== 4. Threads: shared state needs a mutex or an atomic ==
+  std::atomic<long>::is_always_lock_free = true, sizeof 8 (a plain long with special instructions)
+  4 threads x 100000 increments: mutex-guarded = 400000, atomic = 400000
+  scoped_lock holds a and b; another thread's try_lock(a) succeeds: false
+  after the scope: another thread's try_lock(a) succeeds: true
