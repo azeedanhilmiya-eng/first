@@ -74,3 +74,12 @@ Claude Code 支持通过网页端（[claude.ai/code](https://claude.ai/code)）�
 - **iOS 用户**：a-Shell + iSH 组合使用
 
 手机屏幕小，建议外接蓝牙键盘以提升体验。
+
+---
+
+## C++ 教程系列 / C++ Tutorial Series
+
+**C++: From Beginner to Advanced: Beneath the Abstraction** — 面向有 Python/Java 基础、零 C++ 经验的开发者，讲解代码在内存与硬件/操作系统层面到底发生了什么。
+
+- 目录与阅读路线：[docs/cpp-beneath-the-abstraction/README.md](docs/cpp-beneath-the-abstraction/README.md)
+- 每章示例均可编译运行：`cd docs/cpp-beneath-the-abstraction && ./verify.sh`
