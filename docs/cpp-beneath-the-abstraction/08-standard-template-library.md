@@ -527,7 +527,7 @@ for (int x : v) std::cout << x << ' ';   // expected: 1 2 4
 $ g++ -std=c++20 -Wall -Wextra p3_bug.cpp -o p3_bug && ./p3_bug
 size 6: 1 2 4 3 4 3
 ```
-**Underlying Cause:** An algorithm receives two iterators and nothing else; it cannot reach the container to shrink it. `std::remove` does the only thing it can: it moves the elements that are *not* equal to 3 to the front of the range, in order, and returns an iterator to the new logical end. The three slots behind that point are left holding whatever the moves left there (here the old values `3 4 3`, unspecified in general). Nothing was removed because nothing *could* be. g++ 13 does not even warn that the return value was discarded here, although `std::remove` is marked `[[nodiscard]]` in newer library versions.
+**Underlying Cause:** An algorithm receives two iterators and nothing else; it cannot reach the container to shrink it. `std::remove` does the only thing it can: it moves the elements that are *not* equal to 3 to the front of the range, in order, and returns an iterator to the new logical end. The three slots behind that point are left holding whatever the moves left there (here the old values `3 4 3`, unspecified in general). Nothing was removed because nothing *could* be. libstdc++ 13 does not mark `std::remove` `[[nodiscard]]`, so discarding its return value, the only thing that told you where the survivors end, draws no warning.
 
 **Fix:**
 ```cpp

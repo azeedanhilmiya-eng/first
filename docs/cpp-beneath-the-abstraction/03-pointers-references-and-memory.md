@@ -82,7 +82,7 @@ The example's first section asks the kernel where eight objects live and prints 
 
 ### 2.2 The stack, one function call at a time
 
-The stack is the region you use most and see least. It is one contiguous block whose top is tracked by the register `%rsp`; a function *claims* space by subtracting from `%rsp` and *releases* it by adding the same amount back. Nothing is ever "freed" in the heap sense; the memory simply becomes the next call's territory. Here is the example's recursive `record_frames` exactly as g++ compiled it at `-O0`:
+The stack is the region you use most and see least. Each function call owns a slice of it, its **Stack Frame (栈帧)**, and the whole thing is one contiguous block whose top is tracked by the register `%rsp`; a function *claims* space by subtracting from `%rsp` and *releases* it by adding the same amount back. Nothing is ever "freed" in the heap sense; the memory simply becomes the next call's territory. Here is the example's recursive `record_frames` exactly as g++ compiled it at `-O0`:
 
 ```text
 $ objdump -d -C --no-show-raw-insn main | grep -A34 'record_frames(int, std::vector'

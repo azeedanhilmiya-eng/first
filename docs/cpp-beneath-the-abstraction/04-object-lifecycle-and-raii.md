@@ -102,7 +102,7 @@ The route that surprises Java developers is `throw`. When an **Exception (异常
 
 ### 2.4 RAII: the destructor is the only reliable place to clean up
 
-**RAII (Resource Acquisition Is Initialization) (资源获取即初始化)** is the name of the pattern that turns the destructor rule into a resource-management strategy: acquire a resource in a constructor, release it in the destructor, and let scope do the bookkeeping. `ScopedFlag` in the example is the smallest possible RAII type: its constructor raises a flag and its destructor lowers it. `risky_operation` never mentions the flag on the way out, yet the flag is lowered on the normal return *and* while the `runtime_error` is flying past.
+**RAII (Resource Acquisition Is Initialization) (资源获取即初始化)** is the name of the pattern that turns the destructor rule into a resource-management strategy: acquire a resource in a constructor, release it in the destructor, and let **Scope (作用域)**, the region of code in which a name is visible and its object alive, do the bookkeeping. `ScopedFlag` in the example is the smallest possible RAII type: its constructor raises a flag and its destructor lowers it. `risky_operation` never mentions the flag on the way out, yet the flag is lowered on the normal return *and* while the `runtime_error` is flying past.
 
 ```text
 Diagram 3 — two exits from risky_operation(busy, fail); the destructor runs on both

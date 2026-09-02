@@ -13,7 +13,7 @@ Think of a universal remote control. Every device you point it at carries a smal
 
 In Java every object starts with a header that includes a pointer to its class, and every non-`static`, non-`final`, non-`private` method is virtual: `shape.area()` is always a lookup, and the JIT works hard to guess the target so that it can inline the call. Python goes further: `shape.area()` is a *string* lookup of `"area"` through the instance's `__dict__` and then the class's method resolution order, on every call, which is why it is flexible and why it is slow.
 
-C++ makes you say which functions are looked up, with the keyword `virtual`. Those, and only those, get a row in the table; everything else is bound at compile time to a fixed address, exactly like a call to a free function. An object of a class with no virtual functions has no card at all, which is why a `struct Point { double x, y; }` is 16 bytes and not 24. This chapter is about the card, the page, the lookup, and the three things that go wrong when you forget an object is more than its base-class part.
+C++ makes you say which functions are looked up, by declaring them **Virtual Functions (虚函数)** with the keyword `virtual`. Those, and only those, get a row in the table; everything else is bound at compile time to a fixed address, exactly like a call to a free function. An object of a class with no virtual functions has no card at all, which is why a `struct Point { double x, y; }` is 16 bytes and not 24. This chapter is about the card, the page, the lookup, and the three things that go wrong when you forget an object is more than its base-class part.
 
 ## 2. Deep Dive and Low-Level Mechanics
 

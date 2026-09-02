@@ -15,7 +15,7 @@ In Python there is no factory. `import geometry` makes the interpreter read `geo
 
 In Java, `javac` produces one `.class` file per class, but linking is deferred: the JVM's class loader locates `Geometry.class` on the classpath the first time it is needed, verifies it, and resolves the symbolic reference `Geometry.distance(DD)D` at run time. A missing class is a `NoClassDefFoundError` thrown by a program that is already running.
 
-In C++ every one of those questions is answered before the executable exists. The file that comes out of the linker contains raw machine instructions with every cross-reference already patched to a fixed address. There is no interpreter, no class loader, and no runtime lookup by name. When the operating system starts your program it simply maps the file into memory and jumps to the entry point. That is why the build pipeline deserves a whole chapter before we write a single class: the pipeline *is* the runtime that Python and Java hide from you.
+In C++ every one of those questions is answered before the **Executable (可执行文件)** exists. The file that comes out of the linker contains raw machine instructions with every cross-reference already patched to a fixed address. There is no interpreter, no class loader, and no runtime lookup by name. When the operating system starts your program it simply maps the file into memory and jumps to the entry point. That is why the build pipeline deserves a whole chapter before we write a single class: the pipeline *is* the runtime that Python and Java hide from you.
 
 ## 2. Deep Dive and Low-Level Mechanics
 
@@ -346,7 +346,7 @@ Diagram 4 — ELF executable on disk, and how the loader maps it (x86-64 Linux, 
 
 Three of the names in that diagram are the classic memory regions you will use for the rest of the series. The **Text Segment (代码段)** holds instructions and is mapped read-only and executable. The **Data Segment (数据段)** holds globals whose initial value is not zero and must therefore be stored in the file. The **BSS Segment (未初始化数据段)** holds zero-initialized globals such as our two `call_count` variables: the file records only their *size* (`NOBITS`), and the loader hands out fresh zeroed pages. That is why the last `LOAD` line has `MemSiz` larger than `FileSiz`: the difference is BSS.
 
-**And on Windows?** The same design wears a different coat. A Windows executable or DLL uses the **PE (Portable Executable) (可移植可执行文件格式)** format: a legacy DOS header, a PE header, and sections named `.text`, `.rdata`, `.data`, `.bss` with the same roles, plus an *import table* that plays the part of ELF's dynamic symbol table. MSVC's linker `link.exe` does exactly what `ld` does; only the file layout, the name-mangling scheme and the calling convention differ, which is why object files from MSVC and g++ cannot be mixed.
+**And on Windows?** The same design wears a different coat. A Windows executable or DLL uses the **PE (Portable Executable) (可移植可执行文件格式)** format: a legacy DOS header, a PE header, and sections named `.text`, `.rdata`, `.data`, `.bss` with the same roles, plus an *import table* that plays the part of ELF's dynamic symbol table. MSVC's linker `link.exe` does exactly what `ld` does; only the file layout, the name-mangling scheme and the **Calling Convention (调用约定)** differ, which is why object files from MSVC and g++ cannot be mixed.
 
 ### 2.7 The flags that change what the pipeline does
 

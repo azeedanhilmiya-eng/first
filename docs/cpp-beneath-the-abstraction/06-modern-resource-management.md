@@ -6,7 +6,7 @@
 ## 1. Motivation and Mental Model
 
 ### Core Problem
-Heap objects have no scope to end their lives, so C++ needs a way to attach the deterministic destruction of Chapter 4 to a heap object, and the smart pointers do exactly that: a stack object whose destructor deletes a heap object, with the ownership rules written into the type.
+Heap objects have no scope to end their lives, so C++ needs a way to attach the deterministic destruction of Chapter 4 to a heap object, and **Smart Pointers (智能指针)** do exactly that: a stack object whose destructor deletes a heap object, with the ownership rules written into the type.
 
 ### Analogy / Python-Java Contrast
 Think of a rental car. A `std::unique_ptr` is a car with exactly one set of keys; you can hand the keys to someone else (a move), and whoever holds them when the trip ends returns the car. Nobody can copy the keys. A `std::shared_ptr` is a car with a tally counter on the dashboard: every driver who climbs in increments it, every driver who leaves decrements it, and the last one out returns the car. A `std::weak_ptr` is a note with the car's parking spot written on it: you can walk to the spot and, if the car is still there, get in (and bump the counter); if it has been returned, the note tells you so, instead of letting you drive a car that is not there.
@@ -81,7 +81,7 @@ Two features make `unique_ptr` more than a `delete` reminder:
 ```text
 Diagram 2 — libstdc++'s control block; make_shared<Node>(3) then a copy q = p
 
-  std::shared_ptr<Node> p (16 bytes)            heap: ONE block of 32 bytes (make_shared)
+  std::shared_ptr<Node> p (16 bytes)            heap: ONE block of 24 bytes (make_shared; glibc rounds the chunk to 32)
   ┌──────────────────────┐                      ┌───────────────────────────────────────┐
   │ object pointer ──────┼──────────────────────┼──────────────────────────▶ ┌────────┐ │
   │ control-block ptr ───┼───────┐              │ vptr (block is polymorphic) │ id = 3 │ │
@@ -92,7 +92,7 @@ Diagram 2 — libstdc++'s control block; make_shared<Node>(3) then a copy q = p
   │ control-block ptr ───┼──────────────────────│
   └──────────────────────┘                      └───────────────────────────────────────┘
 
-  sizeof(_Sp_counted_ptr_inplace<Node>) == 24 (vptr 8, strong 4, weak 4, Node 4 + pad) → one 32-byte allocation
+  sizeof(_Sp_counted_ptr_inplace<Node>) == 24 (vptr 8, strong 4, weak 4, Node 4 + pad) → one 24-byte allocation
 ```
 
 - **Reference Count (引用计数)**: two of them. The *strong* count is the number of `shared_ptr`s; when it reaches zero the object is destroyed. The *weak* count is the number of `weak_ptr`s (plus one while any strong owner exists); when *it* reaches zero the block itself is freed. Both are updated with atomic instructions (`lock xadd` on x86), because two threads may copy the same `shared_ptr` at once (Chapter 9), and that is the measurable per-copy cost that `unique_ptr` never pays.
@@ -108,7 +108,7 @@ A **Weak Reference (弱引用)** points at the same control block but bumps only
 ```text
 Diagram 3 — the example's section 4: owner (shared_ptr) and watcher (weak_ptr) to Node(4), made by make_shared
 
-  event                                strong  weak   Node(4)     control block (32-byte heap block)
+  event                                strong  weak   Node(4)     control block (one 24-byte heap block)
   ────────────────────────────────────  ──────  ────   ─────────   ─────────────────────────────────
   auto owner = make_shared<Node>(4)       1      1     alive       allocated  (new_blocks = 1)
   watcher = owner                         1      2     alive
@@ -580,6 +580,6 @@ std::vector<int> better(8);   // usually the right answer: it also knows its siz
 
 ### Guided Challenges
 1. **Measure the atomic cost.** Write two functions, one that copies and destroys a `std::shared_ptr<int>` a million times in a loop and one that does the same with `std::unique_ptr<int>` by `std::move`-ing back and forth, compile at `-O2`, and find the `lock xadd` (or `lock add`) instructions in `objdump -d` for the first and their absence in the second. Then link with `-static` versus without and count the `lock` prefixes again.
-   **Hint:** libstdc++ only uses atomic operations for the counts when the program is linked against the thread library; `__gthread_active_p()` decides at run time, which is why the instruction is there but guarded by a branch.
+   **Hint:** libstdc++ checks at run time whether the process is still single-threaded (glibc's `__libc_single_threaded`, older builds `__gthread_active_p()`) and takes a plain add instead of the atomic one when it is, which is why the `lock` instruction is there but guarded by a branch.
 2. **Find the hidden owner.** Build a small event system: a `Button` holds `std::vector<std::function<void()>>` callbacks, and a `Dialog` that owns the `Button` (via `std::shared_ptr`) registers a lambda that captures `shared_from_this()` so it can call `dialog->close()`. Run it under `-fsanitize=address` and explain the leak report using Diagram 4; then fix it by capturing a `std::weak_ptr` and locking inside the lambda, and show with `use_count()` that the `Dialog`'s count no longer changes when the callback is registered.
    **Hint:** a captured `shared_ptr` is an owning edge that lives inside an object the pointee itself owns; draw the graph and look for the cycle.
